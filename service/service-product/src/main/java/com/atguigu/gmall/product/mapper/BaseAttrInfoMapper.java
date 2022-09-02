@@ -4,14 +4,19 @@ import com.atguigu.gmall.model.product.BaseAttrInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Results;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
 
 @Mapper
 public interface BaseAttrInfoMapper extends BaseMapper<BaseAttrInfo> {
-
+    
     List<BaseAttrInfo> selectAttrInfoList(@Param("category1Id") Long category1Id,
                                           @Param("category2Id") Long category2Id,
                                           @Param("category3Id") Long category3Id);
+
+    
+    List<BaseAttrInfo> selectAttrList(Long skuId);
 }

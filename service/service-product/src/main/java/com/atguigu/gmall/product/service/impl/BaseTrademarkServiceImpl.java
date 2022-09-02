@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class BaseTrademarkServiceImpl extends ServiceImpl<BaseTrademarkMapper, BaseTrademark> implements BaseTrademarkService {
+public class BaseTrademarkServiceImpl extends ServiceImpl<BaseTrademarkMapper,BaseTrademark> implements BaseTrademarkService {
 
     @Autowired
     private BaseTrademarkMapper baseTrademarkMapper;
@@ -22,6 +22,6 @@ public class BaseTrademarkServiceImpl extends ServiceImpl<BaseTrademarkMapper, B
 
         QueryWrapper<BaseTrademark> baseTrademarkQueryWrapper = new QueryWrapper<>();
         baseTrademarkQueryWrapper.orderByDesc("id");
-        return baseTrademarkMapper.selectPage(baseTrademarkPage, baseTrademarkQueryWrapper);
+        return baseTrademarkMapper.selectPage(baseTrademarkPage,baseTrademarkQueryWrapper);
     }
 }

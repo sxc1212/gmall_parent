@@ -21,6 +21,8 @@
         <module>model</module>
         <module>service</module>
         <module>server-gateway</module>
+        <module>service-client</module>
+        <module>web</module>
     </modules>
 
     <!--定义jar包的版本号-->
@@ -38,7 +40,6 @@
         <pool2.version>2.6.0</pool2.version>
         <httpclient.version>4.5.13</httpclient.version>
     </properties>
-
     <!--配置dependencyManagement锁定依赖的版本 并不是实际的依赖。-->
     <dependencyManagement>
         <dependencies>
@@ -49,7 +50,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
+            <!--spring cloud-->
             <dependency>
                 <groupId>com.alibaba.cloud</groupId>
                 <artifactId>spring-cloud-alibaba-dependencies</artifactId>
@@ -57,20 +58,18 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
             <!--mybatis-plus 持久层-->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-boot-starter</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
-
+            <!--MySQL-->
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql.version}</version>
             </dependency>
-
             <!--swagger-->
             <dependency>
                 <groupId>io.springfox</groupId>
@@ -83,12 +82,13 @@
                 <artifactId>springfox-swagger-ui</artifactId>
                 <version>${swagger.version}</version>
             </dependency>
-
+            <!--lombok-->
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
             </dependency>
+            <!--fastjson-->
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
@@ -100,21 +100,18 @@
                 <artifactId>redisson</artifactId>
                 <version>${redisson.version}</version>
             </dependency>
-
             <!-- spring2.X集成redis所需common-pool2-->
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-pool2</artifactId>
                 <version>${pool2.version}</version>
             </dependency>
+            <!--httpclient-->
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>${httpclient.version}</version>
             </dependency>
         </dependencies>
-
     </dependencyManagement>
-
-
 </project>
