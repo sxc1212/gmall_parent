@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.item.service.ItemService;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.client.ProductFeignClient;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -22,11 +23,14 @@ public class ItemServiceImpl implements ItemService {
     @Autowired
     private ProductFeignClient productFeignClient;
 
+    @Autowired
+    private RedissonClient redissonClient;
 
     @Override
     public Map<String, Object> getItem(Long skuId) {
 
         Map<String, Object> map = new HashMap<>();
+
 
         SkuInfo skuInfo = this.productFeignClient.getSkuInfo(skuId);
 
@@ -44,7 +48,7 @@ public class ItemServiceImpl implements ItemService {
 
         List<BaseAttrInfo> attrList = this.productFeignClient.getAttrList(skuId);
 
-        if (!CollectionUtils.isEmpty(attrList)){
+        if (!CollectionUtils.isEmpty(attrList)) {
             List<HashMap<String, Object>> attrMapList = attrList.stream().map(baseAttrInfo -> {
 
                 HashMap<String, Object> hashMap = new HashMap<>();
@@ -54,15 +58,15 @@ public class ItemServiceImpl implements ItemService {
                 return hashMap;
             }).collect(Collectors.toList());
 
-            map.put("skuAttrList",attrMapList);
+            map.put("skuAttrList", attrMapList);
         }
 
-        map.put("skuInfo",skuInfo);
-        map.put("categoryView",categoryView);
-        map.put("price",skuPrice);
-        map.put("spuSaleAttrList",spuSaleAttrList);
-        map.put("spuPosterList",spuPosterList);
-        map.put("valuesSkuJson",strJson);
+        map.put("skuInfo", skuInfo);
+        map.put("categoryView", categoryView);
+        map.put("price", skuPrice);
+        map.put("spuSaleAttrList", spuSaleAttrList);
+        map.put("spuPosterList", spuPosterList);
+        map.put("valuesSkuJson", strJson);
 
 
         return map;

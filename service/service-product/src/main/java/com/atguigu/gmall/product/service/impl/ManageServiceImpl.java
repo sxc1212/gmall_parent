@@ -1,21 +1,26 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.atguigu.gmall.common.cache.GmallCache;
+import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.ManageService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import jodd.util.Consumers;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -69,6 +74,12 @@ public class ManageServiceImpl implements ManageService {
 
     @Autowired
     private BaseCategoryViewMapper baseCategoryViewMapper;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
 
     @Override
@@ -259,6 +270,10 @@ public class ManageServiceImpl implements ManageService {
 
             e.printStackTrace();
         }
+
+
+        RBloomFilter<Object> bloomFilter = this.redissonClient.getBloomFilter(RedisConst.SKU_BLOOM_FILTER);
+        bloomFilter.add(skuInfo.getId());
     }
 
     @Override
@@ -291,10 +306,139 @@ public class ManageServiceImpl implements ManageService {
     }
 
     @Override
+    @GmallCache(prefix = "skuInfo:")
     public SkuInfo getSkuInfo(Long skuId) {
+        return getSkuInfoDB(skuId);
+
+
+    }
+
+    private SkuInfo getSkuInfoByRedisson(Long skuId) {
+
+        SkuInfo skuInfo = null;
+
+
+        try {
+            String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
+            skuInfo = (SkuInfo) this.redisTemplate.opsForValue().get(skuKey);
+            if (skuInfo == null) {
+
+
+                String locKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX;
+
+                RLock lock = this.redissonClient.getLock(locKey);
+
+
+                boolean result = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
+                if (result) {
+                    try {
+
+
+                        skuInfo = this.getSkuInfoDB(skuId);
+                        if (skuInfo == null) {
+
+
+                            SkuInfo skuInfo1 = new SkuInfo();
+                            this.redisTemplate.opsForValue().set(skuKey, skuInfo1, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
+
+
+                            return skuInfo1;
+                        }
+
+                        this.redisTemplate.opsForValue().set(skuKey, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
+
+                        return skuInfo;
+                    } finally {
+                        lock.unlock();
+                    }
+                } else {
+
+                    Thread.sleep(500);
+                    return getSkuInfo(skuId);
+                }
+            } else {
+                return skuInfo;
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        return getSkuInfoDB(skuId);
+    }
+
+    private SkuInfo getSkuInfoByRedis(Long skuId) {
+
+        SkuInfo skuInfo = null;
+
+
+        String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
+        try {
+
+
+            skuInfo = (SkuInfo) this.redisTemplate.opsForValue().get(skuKey);
+
+            if (skuInfo == null) {
+
+
+                String locKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX;
+
+                String uuid = UUID.randomUUID().toString();
+
+
+                Boolean result = this.redisTemplate.opsForValue().setIfAbsent(locKey, uuid, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
+
+                if (result) {
+
+                    skuInfo = this.getSkuInfoDB(skuId);
+                    if (skuInfo == null) {
+
+
+                        SkuInfo skuInfo1 = new SkuInfo();
+                        this.redisTemplate.opsForValue().set(skuKey, skuInfo1, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
+
+
+                        return skuInfo1;
+                    }
+
+                    this.redisTemplate.opsForValue().set(skuKey, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
+
+                    String scriptText = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+                    DefaultRedisScript redisScript = new DefaultRedisScript<>();
+                    redisScript.setResultType(Long.class);
+                    redisScript.setScriptText(scriptText);
+                    this.redisTemplate.execute(redisScript, Arrays.asList(locKey), uuid);
+
+                    return skuInfo;
+                } else {
+
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    return getSkuInfo(skuId);
+                }
+            } else {
+
+                return skuInfo;
+            }
+        } catch (Exception e) {
+
+
+            e.printStackTrace();
+        }
+
+        return getSkuInfoDB(skuId);
+    }
+
+    private SkuInfo getSkuInfoDB(Long skuId) {
 
 
         SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+        if (skuInfo == null) {
+            return null;
+        }
 
 
         QueryWrapper<SkuImage> skuImageQueryWrapper = new QueryWrapper<>();
@@ -306,6 +450,7 @@ public class ManageServiceImpl implements ManageService {
     }
 
     @Override
+    @GmallCache(prefix = "categoryView:")
     public BaseCategoryView getBaseCategoryView(Long category3Id) {
 
         return baseCategoryViewMapper.selectById(category3Id);
@@ -314,27 +459,38 @@ public class ManageServiceImpl implements ManageService {
     @Override
     public BigDecimal getSkuPrice(Long skuId) {
 
+        String locKey = "price:" + skuId;
+        RLock lock = this.redissonClient.getLock(locKey);
+        lock.lock();
+        try {
 
-        QueryWrapper<SkuInfo> skuInfoQueryWrapper = new QueryWrapper<>();
-        skuInfoQueryWrapper.eq("id", skuId);
 
-        skuInfoQueryWrapper.select("price");
-        SkuInfo skuInfo = skuInfoMapper.selectOne(skuInfoQueryWrapper);
-        if (skuInfo != null) {
-            return skuInfo.getPrice();
+            QueryWrapper<SkuInfo> skuInfoQueryWrapper = new QueryWrapper<>();
+            skuInfoQueryWrapper.eq("id", skuId);
+
+            skuInfoQueryWrapper.select("price");
+            SkuInfo skuInfo = skuInfoMapper.selectOne(skuInfoQueryWrapper);
+            if (skuInfo != null) {
+                return skuInfo.getPrice();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+            lock.unlock();
         }
-
-
         return new BigDecimal("0");
     }
 
     @Override
+    @GmallCache(prefix = "spuSaleAttrList:")
     public List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId) {
 
         return spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuId, spuId);
     }
 
     @Override
+    @GmallCache(prefix = "skuValueIdsMap:")
     public Map getSkuValueIdsMap(Long spuId) {
 
         HashMap<Object, Object> hashMap = new HashMap<>();
@@ -351,11 +507,13 @@ public class ManageServiceImpl implements ManageService {
     }
 
     @Override
+    @GmallCache(prefix = "poster:")
     public List<SpuPoster> findSpuPosterBySpuId(Long spuId) {
         return spuPosterMapper.selectList(new QueryWrapper<SpuPoster>().eq("spu_id", spuId));
     }
 
     @Override
+    @GmallCache(prefix = "attrList:")
     public List<BaseAttrInfo> getAttrList(Long skuId) {
 
         return baseAttrInfoMapper.selectAttrList(skuId);
