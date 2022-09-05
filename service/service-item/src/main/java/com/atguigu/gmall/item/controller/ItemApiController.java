@@ -10,11 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
-/**
- * author:atGuiGu-mqx
- * date:2022/8/30 15:46
- * 描述：
- **/
+
 @RestController
 @RequestMapping("/api/item")
 public class ItemApiController {
@@ -22,11 +18,11 @@ public class ItemApiController {
     @Autowired
     private ItemService itemService;
 
-    //  返回值是谁，如果定义? 由web-all 决定： 后台存储一个 skuInfo 那么，页面就需要skuInfo.skuName!
-    //  price , skuImageList ...
+
+
     @GetMapping("{skuId}")
     public Result getItem(@PathVariable Long skuId){
-        //  调用服务层方法.
+
         Map<String,Object> map = itemService.getItem(skuId);
         return Result.ok(map);
     }

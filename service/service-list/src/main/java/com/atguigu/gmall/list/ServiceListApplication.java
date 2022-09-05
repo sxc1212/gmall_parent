@@ -1,4 +1,4 @@
-package com.atguigu.gmall.all;
+package com.atguigu.gmall.list;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,9 +11,10 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan({"com.atguigu.gmall"})
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages= {"com.atguigu.gmall"})
-public class WebAllApplication {
-
+public class ServiceListApplication {
     public static void main(String[] args) {
-        SpringApplication.run(WebAllApplication.class, args);
+
+        SpringApplication.run(ServiceListApplication.class,args);
     }
 }
+

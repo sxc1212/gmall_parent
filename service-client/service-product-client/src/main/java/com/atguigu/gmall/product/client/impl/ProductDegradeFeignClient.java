@@ -9,17 +9,13 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-/**
- * author:atGuiGu-mqx
- * date:2022/8/31 14:39
- * 描述：
- **/
+
 @Component
 public class ProductDegradeFeignClient implements ProductFeignClient {
 
     @Override
     public SkuInfo getSkuInfo(Long skuId) {
-        //  远程feign 调用失败的时候会走这个实现类. 默认返回null!
+
         return null;
     }
 
