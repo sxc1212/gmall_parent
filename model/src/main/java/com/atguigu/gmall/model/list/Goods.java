@@ -14,7 +14,7 @@ import java.util.List;
 //  通过注解能够自动创建索引库，以及 Index = goods , Type = info 7.x 没有了，默认值：_doc Document Field
 //  PUT ;
 @Data
-@Document(indexName = "goods" , shards = 3,replicas = 2)
+@Document(indexName = "goods", shards = 3 ,replicas = 2)
 public class Goods {
     // 商品Id skuId
     @Id
