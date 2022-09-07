@@ -1,9 +1,11 @@
 package com.atguigu.gmall.product.controller;
 
 import com.atguigu.gmall.common.result.Result;
-import io.minio.*;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
 import io.minio.errors.*;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -24,7 +26,6 @@ import java.util.UUID;
 public class FileUploadController {
 
 
-
     @Value("${minio.endpointUrl}")
     private String endpointUrl;
 
@@ -39,7 +40,7 @@ public class FileUploadController {
 
 
     @PostMapping("fileUpload")
-    public Result fileUpload(MultipartFile file){
+    public Result fileUpload(MultipartFile file) {
 
         String url = "";
         try {
@@ -57,15 +58,14 @@ public class FileUploadController {
 
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             } else {
-                System.out.println("Bucket "+bucketName+" already exists.");
+                System.out.println("Bucket " + bucketName + " already exists.");
             }
 
 
-            String fileName = System.currentTimeMillis()+ UUID.randomUUID().toString();
+            String fileName = System.currentTimeMillis() + UUID.randomUUID().toString();
 
 
-
-            System.out.println("后缀名"+FilenameUtils.getExtension(file.getOriginalFilename()));
+            System.out.println("后缀名" + FilenameUtils.getExtension(file.getOriginalFilename()));
 
 
             minioClient.putObject(
@@ -75,12 +75,8 @@ public class FileUploadController {
                             .build());
 
 
-
-
-
-
-            url= endpointUrl+"/"+bucketName+"/"+fileName;
-            System.out.println("url:"+url);
+            url = endpointUrl + "/" + bucketName + "/" + fileName;
+            System.out.println("url:" + url);
         } catch (ErrorResponseException e) {
             e.printStackTrace();
         } catch (InsufficientDataException e) {

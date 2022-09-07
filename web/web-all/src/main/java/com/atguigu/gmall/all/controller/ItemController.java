@@ -19,10 +19,9 @@ public class ItemController {
 
 
     @GetMapping("{skuId}.html")
-    public String item(@PathVariable Long skuId, Model model){
+    public String item(@PathVariable Long skuId, Model model) {
 
         Result<Map> result = this.itemFeignClient.getItem(skuId);
-
 
 
         model.addAllAttributes(result.getData());

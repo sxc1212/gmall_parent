@@ -8,11 +8,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+
 @Configuration
 public class ThreadPoolExecutorConfig {
 
     @Bean
-    public ThreadPoolExecutor threadPoolExecutor(){
+    public ThreadPoolExecutor threadPoolExecutor() {
 
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
                 5,

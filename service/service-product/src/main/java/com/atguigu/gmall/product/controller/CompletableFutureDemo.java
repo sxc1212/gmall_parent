@@ -1,52 +1,12 @@
 package com.atguigu.gmall.product.controller;
 
 import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 
 public class CompletableFutureDemo {
 
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
@@ -60,13 +20,9 @@ public class CompletableFutureDemo {
         );
 
 
-
-
-
-
         CompletableFuture<String> completableFutureA = CompletableFuture.supplyAsync(() -> {
             return "hello";
-        },threadPoolExecutor);
+        }, threadPoolExecutor);
 
 
         CompletableFuture<Void> completableFutureB = completableFutureA.thenAcceptAsync((c) -> {
@@ -76,7 +32,7 @@ public class CompletableFutureDemo {
                 e.printStackTrace();
             }
             System.out.println(c + ":\tB");
-        },threadPoolExecutor);
+        }, threadPoolExecutor);
 
 
         CompletableFuture<Void> completableFutureC = completableFutureA.thenAcceptAsync((c) -> {
@@ -86,7 +42,7 @@ public class CompletableFutureDemo {
                 e.printStackTrace();
             }
             System.out.println(c + ":\tC");
-        },threadPoolExecutor);
+        }, threadPoolExecutor);
 
         System.out.println(completableFutureB.get());
         System.out.println(completableFutureC.get());

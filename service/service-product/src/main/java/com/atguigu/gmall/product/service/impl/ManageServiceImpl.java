@@ -9,7 +9,6 @@ import com.atguigu.gmall.product.service.ManageService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import jodd.util.Consumers;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -28,10 +27,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class ManageServiceImpl implements ManageService {
-
-
-
-
 
 
     @Autowired
@@ -89,10 +84,8 @@ public class ManageServiceImpl implements ManageService {
     private RedissonClient redissonClient;
 
 
-
     @Override
     public List<BaseCategory1> getCategory1() {
-
 
 
         return baseCategory1Mapper.selectList(null);
@@ -102,7 +95,7 @@ public class ManageServiceImpl implements ManageService {
     public List<BaseCategory2> getCategory2(Long category1Id) {
 
 
-        return baseCategory2Mapper.selectList(new QueryWrapper<BaseCategory2>().eq("category1_id",category1Id));
+        return baseCategory2Mapper.selectList(new QueryWrapper<BaseCategory2>().eq("category1_id", category1Id));
     }
 
 
@@ -110,29 +103,27 @@ public class ManageServiceImpl implements ManageService {
     public List<BaseCategory3> getCategory3(Long category2Id) {
 
 
-
-
-        return baseCategory3Mapper.selectList(new QueryWrapper<BaseCategory3>().eq("category2_id",category2Id));
+        return baseCategory3Mapper.selectList(new QueryWrapper<BaseCategory3>().eq("category2_id", category2Id));
     }
 
     @Override
     public List<BaseAttrInfo> getAttrInfoList(Long category1Id, Long category2Id, Long category3Id) {
 
-        return baseAttrInfoMapper.selectAttrInfoList(category1Id,category2Id,category3Id);
+        return baseAttrInfoMapper.selectAttrInfoList(category1Id, category2Id, category3Id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveAttrInfo(BaseAttrInfo baseAttrInfo) {
 
-        if (baseAttrInfo.getId()!=null){
+        if (baseAttrInfo.getId() != null) {
 
             baseAttrInfoMapper.updateById(baseAttrInfo);
 
             QueryWrapper<BaseAttrValue> baseAttrValueQueryWrapper = new QueryWrapper<>();
-            baseAttrValueQueryWrapper.eq("attr_id",baseAttrInfo.getId());
+            baseAttrValueQueryWrapper.eq("attr_id", baseAttrInfo.getId());
             baseAttrValueMapper.delete(baseAttrValueQueryWrapper);
-        }else {
+        } else {
 
 
             baseAttrInfoMapper.insert(baseAttrInfo);
@@ -141,10 +132,9 @@ public class ManageServiceImpl implements ManageService {
 
         List<BaseAttrValue> attrValueList = baseAttrInfo.getAttrValueList();
 
-        if (!CollectionUtils.isEmpty(attrValueList)){
+        if (!CollectionUtils.isEmpty(attrValueList)) {
 
             attrValueList.forEach(baseAttrValue -> {
-
 
 
                 baseAttrValue.setAttrId(baseAttrInfo.getId());
@@ -157,9 +147,8 @@ public class ManageServiceImpl implements ManageService {
     public List<BaseAttrValue> getAttrValueList(Long attrId) {
 
 
-
         QueryWrapper<BaseAttrValue> baseAttrValueQueryWrapper = new QueryWrapper<>();
-        baseAttrValueQueryWrapper.eq("attr_id",attrId);
+        baseAttrValueQueryWrapper.eq("attr_id", attrId);
         return baseAttrValueMapper.selectList(baseAttrValueQueryWrapper);
     }
 
@@ -167,7 +156,7 @@ public class ManageServiceImpl implements ManageService {
     public BaseAttrInfo getAttrInfo(Long attrId) {
 
         BaseAttrInfo baseAttrInfo = baseAttrInfoMapper.selectById(attrId);
-        if (baseAttrInfo!=null){
+        if (baseAttrInfo != null) {
 
             baseAttrInfo.setAttrValueList(this.getAttrValueList(attrId));
         }
@@ -179,9 +168,9 @@ public class ManageServiceImpl implements ManageService {
     public IPage<SpuInfo> getSpuList(Page<SpuInfo> spuInfoPage, SpuInfo spuInfo) {
 
         QueryWrapper<SpuInfo> spuInfoQueryWrapper = new QueryWrapper<>();
-        spuInfoQueryWrapper.eq("category3_id",spuInfo.getCategory3Id());
+        spuInfoQueryWrapper.eq("category3_id", spuInfo.getCategory3Id());
         spuInfoQueryWrapper.orderByDesc("id");
-        return spuInfoMapper.selectPage(spuInfoPage,spuInfoQueryWrapper);
+        return spuInfoMapper.selectPage(spuInfoPage, spuInfoQueryWrapper);
     }
 
     @Override
@@ -198,7 +187,7 @@ public class ManageServiceImpl implements ManageService {
         spuInfoMapper.insert(spuInfo);
 
         List<SpuImage> spuImageList = spuInfo.getSpuImageList();
-        if (!CollectionUtils.isEmpty(spuImageList)){
+        if (!CollectionUtils.isEmpty(spuImageList)) {
             spuImageList.forEach(spuImage -> {
 
                 spuImage.setSpuId(spuInfo.getId());
@@ -207,7 +196,7 @@ public class ManageServiceImpl implements ManageService {
         }
 
         List<SpuPoster> spuPosterList = spuInfo.getSpuPosterList();
-        if (!CollectionUtils.isEmpty(spuPosterList)){
+        if (!CollectionUtils.isEmpty(spuPosterList)) {
             spuPosterList.forEach(spuPoster -> {
                 spuPoster.setSpuId(spuInfo.getId());
                 spuPosterMapper.insert(spuPoster);
@@ -215,13 +204,13 @@ public class ManageServiceImpl implements ManageService {
         }
 
         List<SpuSaleAttr> spuSaleAttrList = spuInfo.getSpuSaleAttrList();
-        if (!CollectionUtils.isEmpty(spuSaleAttrList)){
+        if (!CollectionUtils.isEmpty(spuSaleAttrList)) {
             spuSaleAttrList.forEach(spuSaleAttr -> {
                 spuSaleAttr.setSpuId(spuInfo.getId());
                 spuSaleAttrMapper.insert(spuSaleAttr);
 
                 List<SpuSaleAttrValue> spuSaleAttrValueList = spuSaleAttr.getSpuSaleAttrValueList();
-                if (!CollectionUtils.isEmpty(spuSaleAttrValueList)){
+                if (!CollectionUtils.isEmpty(spuSaleAttrValueList)) {
                     spuSaleAttrValueList.forEach(spuSaleAttrValue -> {
                         spuSaleAttrValue.setSpuId(spuInfo.getId());
                         spuSaleAttrValue.setSaleAttrName(spuSaleAttr.getSaleAttrName());
@@ -231,10 +220,11 @@ public class ManageServiceImpl implements ManageService {
             });
         }
     }
+
     @Override
     public List<SpuImage> getSpuImageList(Long spuId) {
 
-        return spuImageMapper.selectList(new QueryWrapper<SpuImage>().eq("spu_id",spuId));
+        return spuImageMapper.selectList(new QueryWrapper<SpuImage>().eq("spu_id", spuId));
     }
 
     @Override
@@ -252,7 +242,7 @@ public class ManageServiceImpl implements ManageService {
             this.skuInfoMapper.insert(skuInfo);
 
             List<SkuImage> skuImageList = skuInfo.getSkuImageList();
-            if (!CollectionUtils.isEmpty(skuImageList)){
+            if (!CollectionUtils.isEmpty(skuImageList)) {
                 skuImageList.forEach(skuImage -> {
                     skuImage.setSkuId(skuInfo.getId());
                     skuImageMapper.insert(skuImage);
@@ -261,7 +251,7 @@ public class ManageServiceImpl implements ManageService {
 
 
             List<SkuAttrValue> skuAttrValueList = skuInfo.getSkuAttrValueList();
-            if (!CollectionUtils.isEmpty(skuAttrValueList)){
+            if (!CollectionUtils.isEmpty(skuAttrValueList)) {
                 skuAttrValueList.forEach(skuAttrValue -> {
 
                     skuAttrValue.setSkuId(skuInfo.getId());
@@ -271,7 +261,7 @@ public class ManageServiceImpl implements ManageService {
 
 
             List<SkuSaleAttrValue> skuSaleAttrValueList = skuInfo.getSkuSaleAttrValueList();
-            if (!CollectionUtils.isEmpty(skuSaleAttrValueList)){
+            if (!CollectionUtils.isEmpty(skuSaleAttrValueList)) {
                 skuSaleAttrValueList.forEach(skuSaleAttrValue -> {
                     skuSaleAttrValue.setSkuId(skuInfo.getId());
                     skuSaleAttrValue.setSpuId(skuInfo.getSpuId());
@@ -293,9 +283,9 @@ public class ManageServiceImpl implements ManageService {
 
 
         QueryWrapper<SkuInfo> skuInfoQueryWrapper = new QueryWrapper<>();
-        skuInfoQueryWrapper.eq("category3_id",skuInfo.getCategory3Id());
+        skuInfoQueryWrapper.eq("category3_id", skuInfo.getCategory3Id());
         skuInfoQueryWrapper.orderByDesc("id");
-        return skuInfoMapper.selectPage(skuInfoPage,skuInfoQueryWrapper);
+        return skuInfoMapper.selectPage(skuInfoPage, skuInfoQueryWrapper);
     }
 
     @Override
@@ -323,7 +313,6 @@ public class ManageServiceImpl implements ManageService {
         return getSkuInfoDB(skuId);
 
 
-
     }
 
     private SkuInfo getSkuInfoByRedisson(Long skuId) {
@@ -332,38 +321,36 @@ public class ManageServiceImpl implements ManageService {
 
 
         try {
-            String skuKey = RedisConst.SKUKEY_PREFIX+skuId+RedisConst.SKUKEY_SUFFIX;
+            String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
             skuInfo = (SkuInfo) this.redisTemplate.opsForValue().get(skuKey);
-            if (skuInfo == null){
+            if (skuInfo == null) {
 
 
-                String locKey = RedisConst.SKUKEY_PREFIX+skuId + RedisConst.SKULOCK_SUFFIX;
+                String locKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX;
 
                 RLock lock = this.redissonClient.getLock(locKey);
 
 
-
-
                 boolean result = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
-                if (result){
+                if (result) {
                     try {
 
 
                         skuInfo = this.getSkuInfoDB(skuId);
-                        if (skuInfo == null){
+                        if (skuInfo == null) {
 
 
                             SkuInfo skuInfo1 = new SkuInfo();
-                            this.redisTemplate.opsForValue().set(skuKey,skuInfo1,RedisConst.SKUKEY_TEMPORARY_TIMEOUT,TimeUnit.SECONDS);
+                            this.redisTemplate.opsForValue().set(skuKey, skuInfo1, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
 
 
                             return skuInfo1;
                         }
 
-                        this.redisTemplate.opsForValue().set(skuKey,skuInfo,RedisConst.SKUKEY_TIMEOUT,TimeUnit.SECONDS);
+                        this.redisTemplate.opsForValue().set(skuKey, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
 
                         return skuInfo;
-                    }finally {
+                    } finally {
                         lock.unlock();
                     }
                 } else {
@@ -371,7 +358,7 @@ public class ManageServiceImpl implements ManageService {
                     Thread.sleep(500);
                     return getSkuInfo(skuId);
                 }
-            }else {
+            } else {
                 return skuInfo;
             }
         } catch (InterruptedException e) {
@@ -387,45 +374,42 @@ public class ManageServiceImpl implements ManageService {
         SkuInfo skuInfo = null;
 
 
-        String skuKey = RedisConst.SKUKEY_PREFIX+skuId+RedisConst.SKUKEY_SUFFIX;
+        String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
         try {
 
 
             skuInfo = (SkuInfo) this.redisTemplate.opsForValue().get(skuKey);
 
-            if (skuInfo == null){
+            if (skuInfo == null) {
 
 
-
-                String locKey = RedisConst.SKUKEY_PREFIX+skuId + RedisConst.SKULOCK_SUFFIX;
+                String locKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX;
 
                 String uuid = UUID.randomUUID().toString();
 
 
-
                 Boolean result = this.redisTemplate.opsForValue().setIfAbsent(locKey, uuid, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
 
-                if (result){
+                if (result) {
 
                     skuInfo = this.getSkuInfoDB(skuId);
-                    if (skuInfo == null){
+                    if (skuInfo == null) {
 
 
                         SkuInfo skuInfo1 = new SkuInfo();
-                        this.redisTemplate.opsForValue().set(skuKey,skuInfo1,RedisConst.SKUKEY_TEMPORARY_TIMEOUT,TimeUnit.SECONDS);
-
+                        this.redisTemplate.opsForValue().set(skuKey, skuInfo1, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
 
 
                         return skuInfo1;
                     }
 
-                    this.redisTemplate.opsForValue().set(skuKey,skuInfo,RedisConst.SKUKEY_TIMEOUT,TimeUnit.SECONDS);
+                    this.redisTemplate.opsForValue().set(skuKey, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
 
                     String scriptText = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
                     DefaultRedisScript redisScript = new DefaultRedisScript<>();
                     redisScript.setResultType(Long.class);
                     redisScript.setScriptText(scriptText);
-                    this.redisTemplate.execute(redisScript, Arrays.asList(locKey),uuid);
+                    this.redisTemplate.execute(redisScript, Arrays.asList(locKey), uuid);
 
                     return skuInfo;
                 } else {
@@ -437,7 +421,7 @@ public class ManageServiceImpl implements ManageService {
                     }
                     return getSkuInfo(skuId);
                 }
-            }else {
+            } else {
 
                 return skuInfo;
             }
@@ -453,15 +437,14 @@ public class ManageServiceImpl implements ManageService {
     private SkuInfo getSkuInfoDB(Long skuId) {
 
 
-
         SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
-        if (skuInfo == null){
+        if (skuInfo == null) {
             return null;
         }
 
 
         QueryWrapper<SkuImage> skuImageQueryWrapper = new QueryWrapper<>();
-        skuImageQueryWrapper.eq("sku_id",skuId);
+        skuImageQueryWrapper.eq("sku_id", skuId);
         List<SkuImage> skuImageList = skuImageMapper.selectList(skuImageQueryWrapper);
         skuInfo.setSkuImageList(skuImageList);
 
@@ -478,18 +461,18 @@ public class ManageServiceImpl implements ManageService {
     @Override
     public BigDecimal getSkuPrice(Long skuId) {
 
-        String locKey = "price:"+skuId;
+        String locKey = "price:" + skuId;
         RLock lock = this.redissonClient.getLock(locKey);
         lock.lock();
         try {
 
 
             QueryWrapper<SkuInfo> skuInfoQueryWrapper = new QueryWrapper<>();
-            skuInfoQueryWrapper.eq("id",skuId);
+            skuInfoQueryWrapper.eq("id", skuId);
 
             skuInfoQueryWrapper.select("price");
             SkuInfo skuInfo = skuInfoMapper.selectOne(skuInfoQueryWrapper);
-            if (skuInfo!=null){
+            if (skuInfo != null) {
                 return skuInfo.getPrice();
             }
         } catch (Exception e) {
@@ -505,7 +488,7 @@ public class ManageServiceImpl implements ManageService {
     @GmallCache(prefix = "spuSaleAttrList:")
     public List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId) {
 
-        return spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuId,spuId);
+        return spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuId, spuId);
     }
 
     @Override
@@ -515,10 +498,10 @@ public class ManageServiceImpl implements ManageService {
         HashMap<Object, Object> hashMap = new HashMap<>();
 
         List<Map> mapList = skuSaleAttrValueMapper.selectSkuValueIdsMap(spuId);
-        if (!CollectionUtils.isEmpty(mapList)){
+        if (!CollectionUtils.isEmpty(mapList)) {
             mapList.forEach(map -> {
 
-                hashMap.put(map.get("value_ids"),map.get("sku_id"));
+                hashMap.put(map.get("value_ids"), map.get("sku_id"));
             });
         }
 
@@ -528,7 +511,7 @@ public class ManageServiceImpl implements ManageService {
     @Override
     @GmallCache(prefix = "poster:")
     public List<SpuPoster> findSpuPosterBySpuId(Long spuId) {
-        return spuPosterMapper.selectList(new QueryWrapper<SpuPoster>().eq("spu_id",spuId));
+        return spuPosterMapper.selectList(new QueryWrapper<SpuPoster>().eq("spu_id", spuId));
     }
 
     @Override
@@ -543,7 +526,7 @@ public class ManageServiceImpl implements ManageService {
     public List<JSONObject> getBaseCategoryList() {
 
         ArrayList<JSONObject> list = new ArrayList<>();
-        
+
         List<BaseCategoryView> baseCategoryViewList = baseCategoryViewMapper.selectList(null);
 
         Map<Long, List<BaseCategoryView>> category1Map = baseCategoryViewList.stream().collect(Collectors.groupingBy(BaseCategoryView::getCategory1Id));
@@ -552,7 +535,7 @@ public class ManageServiceImpl implements ManageService {
         int index = 1;
 
         Iterator<Map.Entry<Long, List<BaseCategoryView>>> iterator = category1Map.entrySet().iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
 
             JSONObject category1 = new JSONObject();
 
@@ -562,11 +545,9 @@ public class ManageServiceImpl implements ManageService {
             List<BaseCategoryView> baseCategoryViewList1 = entry.getValue();
             String category1Name = baseCategoryViewList1.get(0).getCategory1Name();
 
-            category1.put("index",index);
-            category1.put("categoryId",category1Id);
-            category1.put("categoryName",category1Name);
-
-
+            category1.put("index", index);
+            category1.put("categoryId", category1Id);
+            category1.put("categoryName", category1Name);
 
 
             index++;
@@ -587,8 +568,8 @@ public class ManageServiceImpl implements ManageService {
                 List<BaseCategoryView> baseCategoryViewList2 = entry1.getValue();
                 String category2Name = baseCategoryViewList2.get(0).getCategory2Name();
 
-                category2.put("categoryId",category2Id);
-                category2.put("categoryName",category2Name);
+                category2.put("categoryId", category2Id);
+                category2.put("categoryName", category2Name);
 
 
                 categoryChild2List.add(category2);
@@ -599,16 +580,16 @@ public class ManageServiceImpl implements ManageService {
                 baseCategoryViewList2.forEach(baseCategoryView -> {
 
                     JSONObject category3 = new JSONObject();
-                    category3.put("categoryId",baseCategoryView.getCategory3Id());
-                    category3.put("categoryName",baseCategoryView.getCategory3Name());
+                    category3.put("categoryId", baseCategoryView.getCategory3Id());
+                    category3.put("categoryName", baseCategoryView.getCategory3Name());
                     categoryChild3List.add(category3);
                 });
 
-                category2.put("categoryChild",categoryChild3List);
+                category2.put("categoryChild", categoryChild3List);
             }
 
 
-            category1.put("categoryChild",categoryChild2List);
+            category1.put("categoryChild", categoryChild2List);
 
             list.add(category1);
         }

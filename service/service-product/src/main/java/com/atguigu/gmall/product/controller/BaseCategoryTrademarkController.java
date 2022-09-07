@@ -4,7 +4,6 @@ import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.BaseTrademark;
 import com.atguigu.gmall.model.product.CategoryTrademarkVo;
 import com.atguigu.gmall.product.service.BaseCategoryTrademarkService;
-import com.sun.org.apache.regexp.internal.RE;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +19,7 @@ public class BaseCategoryTrademarkController {
 
 
     @GetMapping("findTrademarkList/{category3Id}")
-    public Result findTrademarkList(@PathVariable Long category3Id){
+    public Result findTrademarkList(@PathVariable Long category3Id) {
 
         List<BaseTrademark> baseTrademarkList = this.baseCategoryTrademarkService.findTrademarkList(category3Id);
 
@@ -28,9 +27,8 @@ public class BaseCategoryTrademarkController {
     }
 
 
-
     @GetMapping("findCurrentTrademarkList/{category3Id}")
-    public Result findCurrentTrademarkList(@PathVariable Long category3Id){
+    public Result findCurrentTrademarkList(@PathVariable Long category3Id) {
 
         List<BaseTrademark> baseTrademarkList = this.baseCategoryTrademarkService.findCurrentTrademarkList(category3Id);
 
@@ -38,9 +36,8 @@ public class BaseCategoryTrademarkController {
     }
 
 
-
     @PostMapping("save")
-    public Result save(@RequestBody CategoryTrademarkVo categoryTrademarkVo){
+    public Result save(@RequestBody CategoryTrademarkVo categoryTrademarkVo) {
 
         this.baseCategoryTrademarkService.save(categoryTrademarkVo);
 
@@ -48,12 +45,11 @@ public class BaseCategoryTrademarkController {
     }
 
 
-
     @DeleteMapping("remove/{category3Id}/{tmId}")
     public Result remove(@PathVariable Long category3Id,
-                         @PathVariable Long tmId){
+                         @PathVariable Long tmId) {
 
-        this.baseCategoryTrademarkService.removeByCategory3IdAndTmId(category3Id,tmId);
+        this.baseCategoryTrademarkService.removeByCategory3IdAndTmId(category3Id, tmId);
 
         return Result.ok();
     }

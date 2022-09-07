@@ -1,11 +1,10 @@
 package com.atguigu.gmall.item.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.atguigu.gmall.common.constant.RedisConst;
+import com.atguigu.gmall.client.ListFeignClient;
 import com.atguigu.gmall.item.service.ItemService;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.client.ProductFeignClient;
-import org.redisson.api.RBloomFilter;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,52 +32,51 @@ public class ItemServiceImpl implements ItemService {
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
 
+    @Autowired
+    private ListFeignClient listFeignClient;
+
     @Override
     public Map<String, Object> getItem(Long skuId) {
 
         Map<String, Object> map = new HashMap<>();
 
 
-
-
-
-
         CompletableFuture<SkuInfo> skuInfoCompletableFuture = CompletableFuture.supplyAsync(() -> {
             SkuInfo skuInfo = this.productFeignClient.getSkuInfo(skuId);
-            map.put("skuInfo",skuInfo);
+            map.put("skuInfo", skuInfo);
 
             return skuInfo;
-        },threadPoolExecutor);
+        }, threadPoolExecutor);
 
 
         CompletableFuture<Void> categoryViewCompletableFuture = skuInfoCompletableFuture.thenAcceptAsync(skuInfo -> {
             BaseCategoryView categoryView = this.productFeignClient.getCategoryView(skuInfo.getCategory3Id());
-            map.put("categoryView",categoryView);
-        },threadPoolExecutor);
+            map.put("categoryView", categoryView);
+        }, threadPoolExecutor);
 
         CompletableFuture<Void> priceCompletableFuture = CompletableFuture.runAsync(() -> {
             BigDecimal skuPrice = this.productFeignClient.getSkuPrice(skuId);
             map.put("price", skuPrice);
-        },threadPoolExecutor);
+        }, threadPoolExecutor);
 
 
         CompletableFuture<Void> spuSaleAttrListCompletableFuture = skuInfoCompletableFuture.thenAcceptAsync(skuInfo -> {
             List<SpuSaleAttr> spuSaleAttrList = this.productFeignClient.getSpuSaleAttrListCheckBySku(skuId, skuInfo.getSpuId());
             map.put("spuSaleAttrList", spuSaleAttrList);
 
-        },threadPoolExecutor);
+        }, threadPoolExecutor);
 
         CompletableFuture<Void> spuPosterListCompletableFuture = skuInfoCompletableFuture.thenAcceptAsync(skuInfo -> {
             List<SpuPoster> spuPosterList = this.productFeignClient.getSpuPosterBySpuId(skuInfo.getSpuId());
             map.put("spuPosterList", spuPosterList);
-        },threadPoolExecutor);
+        }, threadPoolExecutor);
 
         CompletableFuture<Void> skuJsonCompletableFuture = skuInfoCompletableFuture.thenAcceptAsync(skuInfo -> {
             Map skuValueIdsMap = this.productFeignClient.getSkuValueIdsMap(skuInfo.getSpuId());
 
             String strJson = JSON.toJSONString(skuValueIdsMap);
             map.put("valuesSkuJson", strJson);
-        },threadPoolExecutor);
+        }, threadPoolExecutor);
 
 
         CompletableFuture<Void> attrListCompletableFuture = CompletableFuture.runAsync(() -> {
@@ -96,7 +94,12 @@ public class ItemServiceImpl implements ItemService {
 
                 map.put("skuAttrList", attrMapList);
             }
-        },threadPoolExecutor);
+        }, threadPoolExecutor);
+
+
+        CompletableFuture<Void> incrCompletableFuture = CompletableFuture.runAsync(() -> {
+            listFeignClient.incrHotScore(skuId);
+        }, threadPoolExecutor);
 
         CompletableFuture.allOf(
                 skuInfoCompletableFuture,
@@ -105,8 +108,9 @@ public class ItemServiceImpl implements ItemService {
                 priceCompletableFuture,
                 spuPosterListCompletableFuture,
                 skuJsonCompletableFuture,
-                attrListCompletableFuture
-                ).join();
+                attrListCompletableFuture,
+                incrCompletableFuture
+        ).join();
 
 
         return map;

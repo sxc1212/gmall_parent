@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-import org.thymeleaf.context.IContext;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,12 +24,11 @@ public class IndexController {
     private TemplateEngine templateEngine;
 
 
-
-    @GetMapping({"index.html","/"})
-    public String index(Model model){
+    @GetMapping({"index.html", "/"})
+    public String index(Model model) {
 
         Result result = productFeignClient.getBaseCategoryList();
-        model.addAttribute("list",result.getData());
+        model.addAttribute("list", result.getData());
 
         return "index/index";
     }
@@ -38,7 +36,7 @@ public class IndexController {
 
     @GetMapping("createIndex")
     @ResponseBody
-    public Result createIndex(){
+    public Result createIndex() {
 
         FileWriter fileWriter = null;
         try {
@@ -49,10 +47,10 @@ public class IndexController {
 
         Result result = productFeignClient.getBaseCategoryList();
         Context context = new Context();
-        context.setVariable("list",result.getData());
+        context.setVariable("list", result.getData());
 
 
-        templateEngine.process("index/index.html",context,fileWriter);
+        templateEngine.process("index/index.html", context, fileWriter);
 
         return Result.ok();
     }

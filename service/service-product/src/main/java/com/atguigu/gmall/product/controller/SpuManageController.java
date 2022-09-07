@@ -11,7 +11,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 
@@ -23,22 +22,16 @@ public class SpuManageController {
     private ManageService manageService;
 
 
-
-
-
-
-
-    
     @GetMapping("{page}/{limit}")
     public Result getSpuList(@PathVariable Long page,
                              @PathVariable Long limit,
                              SpuInfo spuInfo
-                             ){
+    ) {
 
 
-        Page<SpuInfo> spuInfoPage = new Page<>(page,limit);
+        Page<SpuInfo> spuInfoPage = new Page<>(page, limit);
 
-        IPage<SpuInfo> infoIPage = this.manageService.getSpuList(spuInfoPage,spuInfo);
+        IPage<SpuInfo> infoIPage = this.manageService.getSpuList(spuInfoPage, spuInfo);
 
         return Result.ok(infoIPage);
 
@@ -46,7 +39,7 @@ public class SpuManageController {
 
 
     @GetMapping("baseSaleAttrList")
-    public Result getBaseSaleAttrList(){
+    public Result getBaseSaleAttrList() {
 
         List<BaseSaleAttr> baseSaleAttrList = this.manageService.getBaseSaleAttrList();
 
@@ -55,7 +48,7 @@ public class SpuManageController {
 
 
     @PostMapping("saveSpuInfo")
-    public Result saveSpuInfo(@RequestBody SpuInfo spuInfo){
+    public Result saveSpuInfo(@RequestBody SpuInfo spuInfo) {
 
         this.manageService.saveSpuInfo(spuInfo);
 
@@ -64,16 +57,15 @@ public class SpuManageController {
 
 
     @GetMapping("spuImageList/{spuId}")
-    public Result getSpuImageList(@PathVariable Long spuId){
+    public Result getSpuImageList(@PathVariable Long spuId) {
 
         List<SpuImage> spuImageList = this.manageService.getSpuImageList(spuId);
         return Result.ok(spuImageList);
     }
 
 
-
     @GetMapping("spuSaleAttrList/{spuId}")
-    public Result getSpuSaleAttrList(@PathVariable Long spuId){
+    public Result getSpuSaleAttrList(@PathVariable Long spuId) {
 
         List<SpuSaleAttr> spuSaleAttrList = this.manageService.getSpuSaleAttrList(spuId);
         return Result.ok(spuSaleAttrList);

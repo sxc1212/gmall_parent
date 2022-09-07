@@ -18,30 +18,28 @@ public class SkuManageController {
 
 
     @PostMapping("saveSkuInfo")
-    public Result saveSkuInfo(@RequestBody SkuInfo skuInfo){
+    public Result saveSkuInfo(@RequestBody SkuInfo skuInfo) {
 
         this.manageService.saveSkuInfo(skuInfo);
         return Result.ok();
     }
 
 
-
     @GetMapping("/list/{page}/{limit}")
     public Result getSkuInfoList(@PathVariable Long page,
                                  @PathVariable Long limit,
-                                 SkuInfo skuInfo){
+                                 SkuInfo skuInfo) {
 
         Page<SkuInfo> skuInfoPage = new Page<>(page, limit);
 
-        IPage iPage = this.manageService.getSkuInfoList(skuInfoPage,skuInfo);
+        IPage iPage = this.manageService.getSkuInfoList(skuInfoPage, skuInfo);
 
         return Result.ok(iPage);
     }
 
 
-
     @GetMapping("onSale/{skuId}")
-    public Result onSale(@PathVariable Long skuId){
+    public Result onSale(@PathVariable Long skuId) {
 
         this.manageService.onSale(skuId);
         return Result.ok();
@@ -49,7 +47,7 @@ public class SkuManageController {
 
 
     @GetMapping("cancelSale/{skuId}")
-    public Result cancelSale(@PathVariable Long skuId){
+    public Result cancelSale(@PathVariable Long skuId) {
 
         this.manageService.cancelSale(skuId);
         return Result.ok();
