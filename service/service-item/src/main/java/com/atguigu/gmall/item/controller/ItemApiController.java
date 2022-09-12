@@ -19,10 +19,11 @@ public class ItemApiController {
     private ItemService itemService;
 
 
-    @GetMapping("{skuId}")
-    public Result getItem(@PathVariable Long skuId) {
 
-        Map<String, Object> map = itemService.getItem(skuId);
+    @GetMapping("{skuId}")
+    public Result getItem(@PathVariable Long skuId){
+
+        Map<String,Object> map = itemService.getItem(skuId);
         return Result.ok(map);
     }
 

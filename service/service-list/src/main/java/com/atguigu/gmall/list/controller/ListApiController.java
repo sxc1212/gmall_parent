@@ -30,6 +30,7 @@ public class ListApiController {
         return Result.ok();
     }
 
+
     @GetMapping("inner/upperGoods/{skuId}")
     public Result upperGoods(@PathVariable Long skuId) {
 

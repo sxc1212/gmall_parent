@@ -57,6 +57,8 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public void upperGoods(Long skuId) {
+
+
         Goods goods = new Goods();
 
 

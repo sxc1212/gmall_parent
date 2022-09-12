@@ -3,18 +3,16 @@ package com.atguigu.gmall.model.cart;
 import com.atguigu.gmall.model.activity.CouponInfo;
 import com.atguigu.gmall.model.base.BaseEntity;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.List;
 
 @Data
 @ApiModel(description = "购物车")
-@TableName("cart_info")
+//@TableName("cart_info")
 public class CartInfo extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
@@ -36,11 +34,12 @@ public class CartInfo extends BaseEntity {
     @ApiModelProperty(value = "sku名称 (冗余)")
     private String skuName;
 
+    //  1：表示选中  0：表示未选中
     @ApiModelProperty(value = "isChecked")
     private Integer isChecked = 1;
 
     // 实时价格 skuInfo.price
-    BigDecimal skuPrice;  // 端午  1888 | 提示 比加入时，降价了，还是涨价了
+    BigDecimal skuPrice;  // 中秋  1888 | 提示 比加入时，降价了，还是涨价了
 
     //  优惠券信息列表
     @ApiModelProperty(value = "购物项对应的优惠券信息")
