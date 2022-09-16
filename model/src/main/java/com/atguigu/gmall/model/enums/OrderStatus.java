@@ -10,7 +10,7 @@ public enum OrderStatus {
     SPLIT("订单已拆分");
 
     private String comment ;
-    //  根据订单状态来呼气订单名称
+    //  根据订单状态来获取订单名称
     public static String getStatusNameByStatus(String status) {
         OrderStatus arrObj[] = OrderStatus.values();
         for (OrderStatus obj : arrObj) {

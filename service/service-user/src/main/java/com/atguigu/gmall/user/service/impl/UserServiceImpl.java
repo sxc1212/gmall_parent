@@ -7,27 +7,31 @@ import com.atguigu.gmall.user.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
-
+/**
+ * author:atGuiGu-mqx
+ * date:2022/9/8 10:15
+ * 描述：
+ **/
 @Service
 public class UserServiceImpl implements UserService {
 
-
+    //  注入mapper 层
     @Autowired
     private UserInfoMapper userInfoMapper;
-
     @Override
     public UserInfo login(UserInfo userInfo) {
-
-
+        //  查询数据库:
+        //  select * from userInfo where uname = ? and pwd = ?;
         QueryWrapper<UserInfo> userInfoQueryWrapper = new QueryWrapper<>();
-        userInfoQueryWrapper.eq("login_name", userInfo.getLoginName());
+        userInfoQueryWrapper.eq("login_name",userInfo.getLoginName());
         String passwd = userInfo.getPasswd();
-        String newPwd = MD5.encrypt(passwd);
-        userInfoQueryWrapper.eq("passwd", newPwd);
+        String newPwd = MD5.encrypt(passwd);  //  DigestUtils.md5DigestAsHex(passwd.getBytes());
+        userInfoQueryWrapper.eq("passwd",newPwd);
         UserInfo info = userInfoMapper.selectOne(userInfoQueryWrapper);
-
-        if (info != null) {
+        //  判断
+        if (info!=null){
             return info;
         }
         return null;

@@ -79,7 +79,7 @@
     <!-- logstash日志 -->
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
         <!-- logstash ip和暴露的端口，logback就是通过这个地址把日志发送给logstash -->
-        <destination>192.168.136.132:5044</destination>
+        <destination>192.168.200.129:5044</destination>
         <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
 
@@ -91,6 +91,7 @@
         <!-- 根日志记录器：INFO级别  -->
         <root level="INFO">
             <appender-ref ref="CONSOLE" />
+            <appender-ref ref="FILE" />
             <appender-ref ref="ROLLING_FILE" />
             <appender-ref ref="LOGSTASH" />
         </root>

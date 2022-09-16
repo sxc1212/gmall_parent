@@ -10,7 +10,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
+/**
+ * author:atGuiGu-mqx
+ * date:2022/8/27 15:52
+ * 描述：
+ **/
 @Service
 public class BaseTrademarkServiceImpl extends ServiceImpl<BaseTrademarkMapper,BaseTrademark> implements BaseTrademarkService {
 
@@ -19,7 +23,7 @@ public class BaseTrademarkServiceImpl extends ServiceImpl<BaseTrademarkMapper,Ba
 
     @Override
     public IPage getTradeMarkList(Page<BaseTrademark> baseTrademarkPage) {
-
+        //  select * from base_trademark order by id desc limit 0 10;
         QueryWrapper<BaseTrademark> baseTrademarkQueryWrapper = new QueryWrapper<>();
         baseTrademarkQueryWrapper.orderByDesc("id");
         return baseTrademarkMapper.selectPage(baseTrademarkPage,baseTrademarkQueryWrapper);

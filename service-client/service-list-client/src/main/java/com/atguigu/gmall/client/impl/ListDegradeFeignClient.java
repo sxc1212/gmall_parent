@@ -5,7 +5,11 @@ import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.list.SearchParam;
 import org.springframework.stereotype.Component;
 
-
+/**
+ * author:atGuiGu-mqx
+ * date:2022/9/6 14:11
+ * 描述：
+ **/
 @Component
 public class ListDegradeFeignClient implements ListFeignClient {
     @Override

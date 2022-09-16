@@ -4,7 +4,11 @@ import com.atguigu.gmall.model.product.BaseCategoryTrademark;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-
+/**
+ * author:atGuiGu-mqx
+ * date:2022/8/28 9:46
+ * 描述：
+ **/
 @Mapper
 public interface BaseCategoryTrademarkMapper extends BaseMapper<BaseCategoryTrademark> {
 }

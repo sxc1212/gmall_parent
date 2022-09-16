@@ -11,7 +11,11 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-
+/**
+ * author:atGuiGu-mqx
+ * date:2022/9/9 11:13
+ * 描述：
+ **/
 @RestController
 @RequestMapping("api/cart")
 public class CartApiController {
@@ -19,70 +23,76 @@ public class CartApiController {
     @Autowired
     private CartService cartService;
 
-
+    //  添加购物车
     @GetMapping("addToCart/{skuId}/{skuNum}")
     public Result addToCart(@PathVariable Long skuId,
                             @PathVariable Integer skuNum,
-                            HttpServletRequest request) {
-
+                            HttpServletRequest request){
+        //  获取用户Id
         String userId = AuthContextHolder.getUserId(request);
-
-        if (StringUtils.isEmpty(userId)) {
-
+        //  判断
+        if (StringUtils.isEmpty(userId)){
+            //  获取一个临时用户Id
             userId = AuthContextHolder.getUserTempId(request);
         }
-
-        cartService.addToCart(skuId, userId, skuNum);
+        //  调用服务层方法
+        cartService.addToCart(skuId,userId,skuNum);
         return Result.ok();
     }
 
-
+    //  查看购物车列表
     @GetMapping("cartList")
-    public Result getCartList(HttpServletRequest request) {
-
+    public Result getCartList(HttpServletRequest request){
+        //  获取用户Id
         String userId = AuthContextHolder.getUserId(request);
-
+        //  获取一个临时用户Id
         String userTempId = AuthContextHolder.getUserTempId(request);
-
-        List<CartInfo> cartInfoList = this.cartService.getCartList(userId, userTempId);
-
+        //  调用服务层方法
+        List<CartInfo> cartInfoList = this.cartService.getCartList(userId,userTempId);
+        //  返回数据.
         return Result.ok(cartInfoList);
 
     }
 
-
+    //  选中状态：
     @GetMapping("checkCart/{skuId}/{isChecked}")
     public Result checkCart(@PathVariable Long skuId,
                             @PathVariable Integer isChecked,
-                            HttpServletRequest request) {
-
+                            HttpServletRequest request){
+        //  获取用户Id
         String userId = AuthContextHolder.getUserId(request);
-
-        if (StringUtils.isEmpty(userId)) {
-
+        //  判断
+        if (StringUtils.isEmpty(userId)){
+            //  获取一个临时用户Id
             userId = AuthContextHolder.getUserTempId(request);
         }
-
-        this.cartService.checkCart(skuId, userId, isChecked);
-
+        //  调用服务层方法.
+        this.cartService.checkCart(skuId,userId,isChecked);
+        //  返回数据
         return Result.ok();
     }
-
-
+    //  删除购物项
+    //  hdel key field;
     @DeleteMapping("deleteCart/{skuId}")
     public Result deleteCart(@PathVariable Long skuId,
-                             HttpServletRequest request) {
-
+                             HttpServletRequest request){
+        //  获取用户Id
         String userId = AuthContextHolder.getUserId(request);
-
-        if (StringUtils.isEmpty(userId)) {
-
+        //  判断
+        if (StringUtils.isEmpty(userId)){
+            //  获取一个临时用户Id
             userId = AuthContextHolder.getUserTempId(request);
         }
-
-        this.cartService.deleteCart(skuId, userId);
-
+        //  调用服务层方法.
+        this.cartService.deleteCart(skuId,userId);
+        //  返回
         return Result.ok();
     }
 
+    //  /api/cart/getCartCheckedList/{userId}
+    @GetMapping("getCartCheckedList/{userId}")
+    public List<CartInfo> getCartCheckedList(@PathVariable String userId){
+        //  调用服务层方法
+        return this.cartService.getCartCheckedList(userId);
+    }
 }

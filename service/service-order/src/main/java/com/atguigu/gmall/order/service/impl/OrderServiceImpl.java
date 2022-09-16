@@ -1,5 +1,7 @@
 package com.atguigu.gmall.order.service.impl;
 
+import com.atguigu.gmall.common.constant.MqConst;
+import com.atguigu.gmall.common.service.RabbitService;
 import com.atguigu.gmall.common.util.HttpClientUtil;
 import com.atguigu.gmall.model.enums.OrderStatus;
 import com.atguigu.gmall.model.enums.ProcessStatus;
@@ -8,13 +10,16 @@ import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.mapper.OrderDetailMapper;
 import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderService;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
 
@@ -24,7 +29,7 @@ import java.util.*;
  * 描述：
  **/
 @Service
-public class OrderServiceImpl implements OrderService {
+public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper,OrderInfo> implements OrderService {
 
     @Autowired
     private OrderInfoMapper orderInfoMapper;
@@ -34,6 +39,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RabbitService rabbitService;
 
     /*
     ware:
@@ -74,6 +82,9 @@ public class OrderServiceImpl implements OrderService {
 
             });
         }
+
+        //  发送一个延迟消息：
+        this.rabbitService.sendDelayMsg(MqConst.EXCHANGE_DIRECT_ORDER_CANCEL,MqConst.ROUTING_ORDER_CANCEL,orderId,MqConst.DELAY_TIME);
         //  返回订单Id
         return orderId;
     }
@@ -115,5 +126,39 @@ public class OrderServiceImpl implements OrderService {
         String res = HttpClientUtil.doGet(wareUrl + "/hasStock?skuId=" + skuId + "&num=" + skuNum);
         //  返回比较结果。
         return "1".equals(res);
+    }
+
+    @Override
+    public IPage<OrderInfo> getMyOrderList(Page<OrderInfo> orderInfoPage, String userId) {
+        //  两张表： orderInfo ,orderDetail;
+        IPage<OrderInfo> infoIPage = orderInfoMapper.selectMyOrder(orderInfoPage,userId);
+        infoIPage.getRecords().forEach(orderInfo -> {
+            String statusName = OrderStatus.getStatusNameByStatus(orderInfo.getOrderStatus());
+            orderInfo.setOrderStatusName(statusName);
+        });
+        return infoIPage;
+    }
+
+    @Override
+    public void execExpiredOrder(Long orderId) {
+        //  本质更新订单状态
+        //  根据订单Id , 更新订单状态 {PAID ,SPLIT}
+        this.updateOrderStatus(orderId,ProcessStatus.CLOSED);
+    }
+
+    /**
+     * 根据订单Id 修改 订单状态.
+     * @param orderId
+     * @param processStatus
+     */
+    private void updateOrderStatus(Long orderId, ProcessStatus processStatus) {
+        OrderInfo orderInfo = new OrderInfo();
+        orderInfo.setId(orderId);
+        //  订单 状态
+        orderInfo.setOrderStatus(processStatus.getOrderStatus().name());
+        //  更新进度状态  ---  进度状态中能获取到订单状态.
+        orderInfo.setProcessStatus(processStatus.name());
+        orderInfo.setUpdateTime(new Date());
+        this.orderInfoMapper.updateById(orderInfo);
     }
 }

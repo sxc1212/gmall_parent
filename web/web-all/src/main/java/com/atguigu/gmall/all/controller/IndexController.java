@@ -9,11 +9,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.context.IContext;
 
 import java.io.FileWriter;
 import java.io.IOException;
 
-
+/**
+ * author:atGuiGu-mqx
+ * date:2022/9/4 11:25
+ * 描述：
+ **/
 @Controller
 public class IndexController {
 
@@ -23,35 +28,36 @@ public class IndexController {
     @Autowired
     private TemplateEngine templateEngine;
 
-
-    @GetMapping({"index.html", "/"})
-    public String index(Model model) {
-
+    //  访问首页控制器
+    //  www.gmall.com/  www.gmall.com/index.html
+    @GetMapping({"index.html","/"})
+    public String index(Model model){
+        //  调用数据
         Result result = productFeignClient.getBaseCategoryList();
-        model.addAttribute("list", result.getData());
-
+        model.addAttribute("list",result.getData());
+        //  存储list
         return "index/index";
     }
 
-
+    //  创建静态化页面
     @GetMapping("createIndex")
     @ResponseBody
-    public Result createIndex() {
-
+    public Result createIndex(){
+        //  定义输出对象
         FileWriter fileWriter = null;
         try {
             fileWriter = new FileWriter("D:\\index.html");
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        //  设置页面要显示的内容
         Result result = productFeignClient.getBaseCategoryList();
         Context context = new Context();
-        context.setVariable("list", result.getData());
+        context.setVariable("list",result.getData());
 
-
-        templateEngine.process("index/index.html", context, fileWriter);
-
+        //      void process(String var1, IContext var2, Writer var3);
+        templateEngine.process("index/index.html",context,fileWriter);
+        //  返回数据
         return Result.ok();
     }
 

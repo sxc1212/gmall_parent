@@ -7,12 +7,26 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
-
+/**
+ * author:atGuiGu-mqx
+ * date:2022/8/28 14:42
+ * 描述：
+ **/
 @Mapper
 public interface SpuSaleAttrMapper extends BaseMapper<SpuSaleAttr> {
-    
+    /**
+     * 根据spuId 获取销售属性集合列表
+     * @param spuId
+     * @return
+     */
     List<SpuSaleAttr> selectSpuSaleAttrList(Long spuId);
 
-    
+    /**
+     * 根据skuId 与 spuId 获取销售属性数据
+     * 多个参数需要添加注解;
+     * @param skuId
+     * @param spuId
+     * @return
+     */
     List<SpuSaleAttr> selectSpuSaleAttrListCheckBySku(@Param("skuId") Long skuId, @Param("spuId") Long spuId);
 }

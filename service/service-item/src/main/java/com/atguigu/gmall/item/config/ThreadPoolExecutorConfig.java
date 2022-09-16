@@ -8,21 +8,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * author:atGuiGu-mqx
+ * date:2022/9/4 10:09
+ * 描述：
+ **/
 @Configuration
 public class ThreadPoolExecutorConfig {
-
+    //  7个核心参数；
     @Bean
-    public ThreadPoolExecutor threadPoolExecutor() {
-
+    public ThreadPoolExecutor threadPoolExecutor(){
+        //  创建线程池：
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
-                5,
-                100,
-                3,
-                TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(3),
-                Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.AbortPolicy()
+                5,  //  核心线程数
+                100, // 最大线程数
+                3, //   空闲线程存活时间
+                TimeUnit.SECONDS,   // 时间单位
+                new ArrayBlockingQueue<>(3), // 阻塞队列
+                Executors.defaultThreadFactory(),   //  线程工厂
+                new ThreadPoolExecutor.AbortPolicy() // 拒绝策略 抛出异常 ，由调用者机制，抛弃等待时间最久的任务，直接丢弃
         );
         return threadPoolExecutor;
     }

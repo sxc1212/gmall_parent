@@ -4,7 +4,11 @@ import com.atguigu.gmall.model.user.UserInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-
+/**
+ * author:atGuiGu-mqx
+ * date:2022/9/8 10:16
+ * 描述：
+ **/
 @Mapper
 public interface UserInfoMapper extends BaseMapper<UserInfo> {
 }
