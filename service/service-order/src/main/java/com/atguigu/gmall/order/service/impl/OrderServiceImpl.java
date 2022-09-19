@@ -1,5 +1,6 @@
 package com.atguigu.gmall.order.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.common.constant.MqConst;
 import com.atguigu.gmall.common.service.RabbitService;
 import com.atguigu.gmall.common.util.HttpClientUtil;
@@ -10,10 +11,12 @@ import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.mapper.OrderDetailMapper;
 import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.checkerframework.checker.units.qual.A;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * author:atGuiGu-mqx
@@ -144,6 +148,23 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper,OrderInfo> imp
         //  本质更新订单状态
         //  根据订单Id , 更新订单状态 {PAID ,SPLIT}
         this.updateOrderStatus(orderId,ProcessStatus.CLOSED);
+
+        //  退款的时候的： 关闭paymentInfo orderInfo ; 远程调用 sendMsg
+        this.rabbitService.sendMsg(MqConst.EXCHANGE_DIRECT_PAYMENT_CLOSE,MqConst.ROUTING_PAYMENT_CLOSE,orderId);
+    }
+
+    @Override
+    public OrderInfo getOrderInfo(Long orderId) {
+        //  获取订单对象
+        OrderInfo orderInfo = orderInfoMapper.selectById(orderId);
+        //  判断防止空指针
+        if (orderInfo!=null){
+            //  获取订单明细
+            List<OrderDetail> orderDetailList = this.orderDetailMapper.selectList(new QueryWrapper<OrderDetail>().eq("order_id", orderId));
+            orderInfo.setOrderDetailList(orderDetailList);
+        }
+        //  返回数据
+        return orderInfo;
     }
 
     /**
@@ -151,7 +172,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper,OrderInfo> imp
      * @param orderId
      * @param processStatus
      */
-    private void updateOrderStatus(Long orderId, ProcessStatus processStatus) {
+    public void updateOrderStatus(Long orderId, ProcessStatus processStatus) {
         OrderInfo orderInfo = new OrderInfo();
         orderInfo.setId(orderId);
         //  订单 状态
@@ -160,5 +181,108 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper,OrderInfo> imp
         orderInfo.setProcessStatus(processStatus.name());
         orderInfo.setUpdateTime(new Date());
         this.orderInfoMapper.updateById(orderInfo);
+    }
+
+    @Override
+    public void sendOrderMsg(Long orderId) {
+        //  更改状态.
+        this.updateOrderStatus(orderId,ProcessStatus.NOTIFIED_WARE);
+        //  构成json 字符串  orderInfo  --->  json 但是，orderInfo 中有很多不需要的字段 ；
+        //  orderInfo --->  map ---> json
+        //  orderInfo 必须包含orderDetailList
+        OrderInfo orderInfo = this.getOrderInfo(orderId);
+        //   orderInfo --->  map
+        Map map = this.wareJson(orderInfo);
+        //  发送消息：
+        this.rabbitService.sendMsg(MqConst.EXCHANGE_DIRECT_WARE_STOCK,MqConst.ROUTING_WARE_STOCK, JSON.toJSONString(map));
+    }
+
+    /**
+     * 将orderInfo 中的部分字段改为 map
+     * @param orderInfo
+     * @return
+     */
+    public Map wareJson(OrderInfo orderInfo) {
+        //  声明map 集合
+        Map<String,Object> map = new HashMap<>();
+        //  给map 集合赋值操作.
+        map.put("orderId", orderInfo.getId());
+        map.put("consignee", orderInfo.getConsignee());
+        map.put("consigneeTel", orderInfo.getConsigneeTel());
+        map.put("orderComment", orderInfo.getOrderComment());
+        map.put("orderBody", orderInfo.getTradeBody());
+        map.put("deliveryAddress", orderInfo.getDeliveryAddress());
+        map.put("paymentWay", "2");
+
+        //  wareId	 传入时的仓库编号;
+        map.put("wareId",orderInfo.getWareId());
+        //  赋值订单明细：
+        List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
+        //  List<Map>
+        List<HashMap<String, Object>> detailList = orderDetailList.stream().map(orderDetail -> {
+            HashMap<String, Object> hashMap = new HashMap<>();
+            hashMap.put("skuId", orderDetail.getSkuId());
+            hashMap.put("skuNum", orderDetail.getSkuNum());
+            hashMap.put("skuName", orderDetail.getSkuName());
+            return hashMap;
+        }).collect(Collectors.toList());
+        map.put("details", detailList);
+        //  返回map 集合
+        return map;
+    }
+
+    @Override
+    public List<OrderInfo> orderSplit(String orderId, String wareSkuMap) {
+        /*
+            1.  先获取到原始订单
+            2.  [{"wareId":"1","skuIds":["2","10"]},{"wareId":"2","skuIds":["3"]}] 参数变为能操作的对象！
+            3.  获取子订单 并且给子订单赋值
+            4.  重新保存子订单
+            5.  将子订单添加到集合中
+            6.  更改原始订单状态
+
+         */
+        List<OrderInfo> orderInfoList = new ArrayList<>();
+
+        OrderInfo orderInfoOrigin = this.getOrderInfo(Long.parseLong(orderId));
+        List<Map> mapList = JSON.parseArray(wareSkuMap, Map.class);
+        //  判断
+        if (!CollectionUtils.isEmpty(mapList)){
+            //  循环遍历
+            for (Map map : mapList) {
+                //  获取仓库Id
+                String wareId = (String) map.get("wareId");
+                //  获取仓库Id 中对应的skuId
+                List<String> skuIdsList = (List<String>) map.get("skuIds");
+                //  声明一个子订单对象
+                OrderInfo subOrderInfo = new OrderInfo();
+                //  属于同一个实体类
+                BeanUtils.copyProperties(orderInfoOrigin,subOrderInfo);
+                //  防止主键冲突
+                subOrderInfo.setId(null);
+                //  父id
+                subOrderInfo.setParentOrderId(Long.parseLong(orderId));
+                //  赋值仓库Id
+                subOrderInfo.setWareId(wareId);
+                //  赋值子订单订单明细  子订单明细是从原始订单明细中获取的！
+                //  分析原始订单明细：2 3 10
+                //  [{"wareId":"1","skuIds":["2","10"]},{"wareId":"2","skuIds":["3"]}]
+                List<OrderDetail> orderDetailList = orderInfoOrigin.getOrderDetailList().stream().filter((orderDetail -> {
+                    return skuIdsList.contains(orderDetail.getSkuId().toString());
+                })).collect(Collectors.toList());
+                //  赋值子订单明细
+                subOrderInfo.setOrderDetailList(orderDetailList);
+                //  计算总金额
+                subOrderInfo.sumTotalAmount();
+                //  保存子订单
+                this.saveOrderInfo(subOrderInfo);
+                //  添加子订单到集合中
+                orderInfoList.add(subOrderInfo);
+            }
+        }
+        //  更新原始订单状态.
+        this.updateOrderStatus(Long.parseLong(orderId),ProcessStatus.SPLIT);
+        //  返回子订单集合
+        return orderInfoList;
     }
 }

@@ -14,6 +14,7 @@ import com.atguigu.gmall.user.client.UserFeignClient;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -208,5 +210,35 @@ public class OrderApiController {
         IPage<OrderInfo> orderInfoIPage = this.orderService.getMyOrderList(orderInfoPage,userId);
         //  返回数据
         return Result.ok(orderInfoIPage);
+    }
+
+    //  根据订单Id 获取订单信息
+    @GetMapping("inner/getOrderInfo/{orderId}")
+    public OrderInfo getOrderInfo(@PathVariable Long orderId){
+        //  只有orderInfo . 没有订单明细;  --- 后续拆单要使用订单明细。
+        //  OrderInfo orderInfo = this.orderService.getById(orderId);
+        OrderInfo orderInfo = this.orderService.getOrderInfo(orderId);
+        return orderInfo;
+    }
+
+    //  拆单：
+    //  http://localhost:8204/api/order/orderSplit?orderId=xxx&ware=xx
+    @PostMapping("orderSplit")
+    public List<Map> orderSplit(HttpServletRequest request){
+        //  获取到传递的参数。
+        String orderId = request.getParameter("orderId");
+        //  分析原始订单明细：2 3 10
+        //  [{"wareId":"1","skuIds":["2","10"]},{"wareId":"2","skuIds":["3"]}]
+        //  仓库Id 与skuId 的对应关系！
+        String wareSkuMap = request.getParameter("wareSkuMap");
+        //  获取子订单的集合： orderInfo
+        List<OrderInfo> orderInfoList = this.orderService.orderSplit(orderId,wareSkuMap);
+        //  循环遍历.
+        List<Map> mapList = orderInfoList.stream().map(orderInfo -> {
+            Map map = this.orderService.wareJson(orderInfo);
+            return map;
+        }).collect(Collectors.toList());
+        //  返回结果集
+        return mapList;
     }
 }
